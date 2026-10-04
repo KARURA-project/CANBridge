@@ -1,0 +1,27 @@
+{
+  "name": "KaruraCAN",
+  "version": "0.1.0",
+  "frameworks": "arduino",
+  "platforms": [
+    "espressif32",
+    "raspberrypi"
+  ],
+  "build": {
+    "flags": [
+      "-std=gnu++11"
+    ]
+  },
+  "export": {
+    "include": [
+      "src",
+      "third_party/acan2515/src",
+      "third_party/acan2517FD/src",
+      "third_party/acan2515/LICENSE",
+      "third_party/acan2517FD/LICENSE",
+      "library.json",
+      "library.properties",
+      "README.md",
+      "LICENSE"
+    ]
+  }
+}

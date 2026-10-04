@@ -1,0 +1,20 @@
+name: CAN checks
+on: [push, pull_request]
+jobs:
+  checks:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: pip install platformio==6.1.18
+      - run: c++ -std=c++11 -Wall -Wextra -Werror -Isrc tests/frame.cpp -o /tmp/frame && /tmp/frame
+      - run: pio run -d tests/embedded -e s3 -e s3_mcp2515 -e s3_mcp2518
+      - run: python3 scripts/package.py
+      - uses: actions/upload-artifact@v4
+        with:
+          name: KaruraCAN
+          path: dist/KaruraCAN.zip

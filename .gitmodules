@@ -1,0 +1,6 @@
+[submodule "third_party/acan2515"]
+	path = third_party/acan2515
+	url = https://github.com/pierremolinaro/acan2515.git
+[submodule "third_party/acan2517FD"]
+	path = third_party/acan2517FD
+	url = https://github.com/pierremolinaro/acan2517FD.git
