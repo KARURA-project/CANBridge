@@ -1,5 +1,5 @@
 #pragma once
-#include "../CANBridge/Types.h"
+#include "Controller.hpp"
 #include <memory>
 #include <new>
 namespace canbridge {

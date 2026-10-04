@@ -5,3 +5,7 @@
 - ESP-IDF TWAI is provided by the installed Arduino-ESP32 framework, not bundled into this repository.
 
 Dependency license texts are retained inside the submodules and distribution ZIP.
+
+CANBridge adaptation: `src/dependencies/acan2515/ACAN2515.cpp` is derived from the pinned ACAN2515 source under its MIT license. ESP task/semaphore creation is removed and `poll()` executes synchronously. CANBridge uses no external INT pin. The upstream submodule remains unchanged.
+
+For ACAN2517FD on ESP, CANBridge releases the upstream semaphore when destroying the backend, after upstream end() has stopped its task.

@@ -1,5 +1,5 @@
 #pragma once
-#include "../../CANBridge/Types.h"
+#include "../../internal/Controller.hpp"
 #include <ACAN2515.h>
 #include <ACAN2517FD.h>
 namespace canbridge {
@@ -57,8 +57,17 @@ class Mcp2518 final : public Controller {
 public:
     Mcp2518(SPIClass &spi, std::uint8_t cs, std::uint32_t oscillatorHz)
         : driver_(cs, spi, 255), oscillator_(oscillatorHz) {}
+    ~Mcp2518() override {
+        if (started_) driver_.end();
+#ifdef ARDUINO_ARCH_ESP32
+        if (driver_.mISRSemaphore) vSemaphoreDelete(driver_.mISRSemaphore);
+#endif
+    }
     Result begin(const CommonConfig &c) override {
         if (started_) return Result::AlreadyStarted;
+#ifdef ARDUINO_ARCH_ESP32
+        if (!driver_.mISRSemaphore) return Result::AllocationFailed;
+#endif
         if (!c.bitrate) return Result::InvalidConfig;
         ACAN2517FDSettings::Oscillator osc;
         if (oscillator_==4000000) osc=ACAN2517FDSettings::OSC_4MHz;
@@ -71,9 +80,11 @@ public:
         started_=true; return Result::Ok;
     }
     Result end() override {
-        if (!started_) return Result::NotStarted;
-        if (!driver_.end()) return Result::DriverError;
-        started_=false; return Result::Ok;
+        // Upstream frees its buffers and stops its task even if mode confirmation fails.
+        if (!started_) return Result::Ok;
+        const bool stopped = driver_.end();
+        started_=false;
+        return stopped ? Result::Ok : Result::DriverError;
     }
     Result send(const Frame &f) override {
         if (!started_) return Result::NotStarted;

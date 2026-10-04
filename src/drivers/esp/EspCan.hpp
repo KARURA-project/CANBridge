@@ -1,11 +1,12 @@
 #pragma once
-#include "../../CANBridge/Types.h"
+#include "../../internal/Controller.hpp"
 #include <Arduino.h>
 #include <atomic>
 #include <esp_idf_version.h>
 #if ESP_IDF_VERSION >= ESP_IDF_VERSION_VAL(5,5,0)
 #include <esp_twai.h>
 #include <esp_twai_onchip.h>
+#include <freertos/FreeRTOS.h>
 #include <freertos/queue.h>
 #else
 #include <driver/twai.h>

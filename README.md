@@ -16,7 +16,10 @@ CAN FDのデータフレームは初版の対象外です。MCP2518FDとC5もCla
 
 RP系はArduino-Pico（Earle Philhower）を対象とします。
 対応実装と実機検証は別です。現時点で実機での通信確認はしていません。
-対象5ボードの計12構成は旧APIでビルドを確認しています。現在のAPIでの全構成ビルドと実機通信は未確認です。
+現在のAPIでRP系6構成とESP32S3の3構成のビルドを確認しています。
+RP系はArduino-Pico 5.5.1、ESP32S3はArduino-ESP32 2.0.17で確認しました。
+ESP32C5はESP-IDF 5.5.2のSDKヘッダーとの構文整合性を確認していますが、
+現在のAPIでのC5サンプル3構成の完全ビルドと、全ボードの実機通信は未確認です。
 
 ## インストール
 
@@ -57,6 +60,7 @@ canbridge::Config config;
 canbridge::Bus bus;
 
 void setup() {
+    Serial.begin(115200);
     config.bitrate = 1000000;
     config.txPin = D0;
     config.rxPin = D1;
@@ -73,6 +77,7 @@ canbridge::Config config;
 canbridge::Bus bus;
 
 void setup() {
+    Serial.begin(115200);
     config.bitrate = 1000000;
     config.spi = &SPI;
     config.csPin = SS;
@@ -86,7 +91,8 @@ void setup() {
 MCP2518FDは `CANBridge/Mcp2518.h` を選びます。送受信は共通の
 `bus.receive(frame)` / `bus.send(frame)` / `bus.pollHealth(health)` を使います。
 1つの翻訳単位ではコントローラー選択ヘッダーを1つだけincludeしてください。
-`CANBridge.h` は共通のフレーム・結果型のみを公開します。
+`CANBridge.h` は共通のFrame・Result・Health型を公開します。
+同じアプリケーション内では同じコントローラー選択ヘッダーを使用してください。
 
 必須項目はすべて未指定で初期化されます。通信速度・発振器周波数は0、ピンは-1、
 SPIはnullptrが未指定です。通常モード（listenOnly=false）は任意項目の既定値です。
@@ -98,6 +104,8 @@ SPIはnullptrが未指定です。通常モード（listenOnly=false）は任意
 `Frame` は `id / length / data[8] / extended / remote`。
 SPIのピン設定と `SPI.begin()` はアプリ側で行います。外付け実装はポーリング方式です。
 外付けのINTピンは使用せず、割り込み関数も不要です。
+MCP2515は同期ポーリングです。ESP上のMCP2518FDは元ドライバーの内部タスクを使い、
+end()でそのタスクを終了します。
 MCP2518FDの発振器は4/20/40 MHzを受け付けます。
 ESP旧APIは125/250/500/1000 kbit/s、新APIと外付けは基盤のタイミング計算に従います。
 
@@ -118,17 +126,19 @@ ESP旧APIは125/250/500/1000 kbit/s、新APIと外付けは基盤のタイミン
 
 Bus-off / Error-passiveと、観測可能なハードウェア・ソフトウェア受信欠落を報告します。
 `receiveLoss` は観測した欠落を示します。ただし基盤やSDKが公開しない欠落もあるため、
-`lossDetectionComplete` はfalseです。「falseだから絶対に欠落していない」とは解釈しません。
+`lossDetectionComplete` はfalseです。`receiveLoss=false` でも欠落がなかった保証にはなりません。
 各値は現在状態・累積またはラッチで、読み出しても消去しません。イベント回数ではありません。
-Bus-off等からの自動復旧や、古いアプリ指令の自動再開は行いません。
-アプリが停止し、原因を解消して `end()/begin()` で再開してください。
+ライブラリはBus-offからの復旧処理やアプリ指令の再開判断を行いません。
+コントローラー自身の復旧動作や保留中フレームの扱いはハードウェアに依存するため、
+異常時に送信を止める方針はアプリ側で実装してください。
+アプリが停止し、原因を解消して `end()` の成功を確認してから `begin(config)` で再開してください。
 CANトランシーバーの電圧・終端・EN/STB固定配線を確認してください。
 トランシーバー制御は初版に含めません。
 
 ## 開発と配布
 
 ACAN2515 / ACAN2517FDをコミット固定のサブモジュールで読み込みます。
-`src`の小さな転送ファイルにより、ライブラリを1つ読み込むだけで依存がビルドされます。
+`src`の統合コードにより、ライブラリを1つ読み込むだけで依存がビルドされます。
 ESPはArduinoコア同梱の公式ESP-IDF TWAIドライバーを直接使用します。
 受信欠落の観測や送信バッファ寿命を保つため、別のESPラッパーは使用しません。
 依存更新時はサブモジュールのコミット、ビルド、ライセンスをまとめて確認します。
@@ -148,7 +158,7 @@ src/
     esp/                 ESP内蔵TWAIの実装
     mcp/                 MCP2515・MCP2518FDの実装
   dependencies/
-    acan2515/            ACAN2515ソースのビルド入口
+    acan2515/            ACAN2515派生ソースとビルド入口
     acan2517FD/          ACAN2517FDソースのビルド入口
   ACAN*.h など           依存ヘッダーへの転送ファイル
 examples/                ボード・コントローラー名を付けたサンプル
@@ -161,5 +171,7 @@ third_party/             元の依存ライブラリ（固定コミットのサ�
 `src` 直下の `ACAN*.h` と `MCP2515ReceiveFilters.h` は、サブモジュール内の
 ヘッダーへ転送します。元ライブラリの山括弧形式のincludeをArduinoから解決するために
 この位置に置いています。利用者が直接includeする必要はありません。
-`dependencies/` は元ソースを読み込む短いビルド入口で、依存ライブラリ本体は
-`third_party/` に一度だけ置いています。
+`dependencies/` は依存コードのビルド入口です。ACAN2515.cppのみ、固定した元ソースの
+ESPタスク生成・セマフォ生成を除き、同期ポーリングへ変更した派生ソースを置いています。
+元ドライバーはESPの常駐タスクをend()で終了しないため、Busの終了・破棄後のアクセスを
+防ぐための変更です。サブモジュール本体には変更を加えていません。

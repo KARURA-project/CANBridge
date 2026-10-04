@@ -53,7 +53,8 @@ Result EspCan::send(const Frame &f) {
     esp_err_t err;
 #if ESP_IDF_VERSION >= ESP_IDF_VERSION_VAL(5,5,0)
     // Keep frame and payload alive until the SDK has completed transmission.
-    if(twai_node_transmit_wait_all_done(node_,0)!=ESP_OK) return Result::Busy;
+    const esp_err_t pending = twai_node_transmit_wait_all_done(node_,0);
+    if(pending!=ESP_OK) return pending==ESP_ERR_TIMEOUT ? Result::Busy : Result::DriverError;
     txStorage_=f;txFrame_={};
     txFrame_.header.id=f.id;txFrame_.header.ide=f.extended;txFrame_.header.rtr=f.remote;
     txFrame_.header.dlc=f.length;
