@@ -1,7 +1,7 @@
 #ifdef ARDUINO_ARCH_ESP32
-#include "canbridge/EspCan.hpp"
+#include "detail/EspCan.hpp"
 namespace canbridge {
-Result EspCan::begin(const Config &c) {
+Result EspCan::begin(const CommonConfig &c) {
     if(started_) return Result::AlreadyStarted;
     if(tx_<0 || rx_<0 || !c.bitrate) return Result::InvalidConfig;
 #if ESP_IDF_VERSION >= ESP_IDF_VERSION_VAL(5,5,0)

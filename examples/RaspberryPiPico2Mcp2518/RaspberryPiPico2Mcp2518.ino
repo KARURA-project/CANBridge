@@ -1,39 +1,36 @@
-// RaspberryPiPico2 / Mcp2518: Classic CAN echo.
 #include <Arduino.h>
-#include <CANBridge.h>
+#include <CANBridge/Mcp2518.h>
 using namespace canbridge;
 
-// Match these settings to your wiring and module.
-constexpr uint8_t kChipSelect = SS;
-constexpr uint32_t kOscillatorHz = 40000000;
-Mcp2518 controller(SPI, kChipSelect, kOscillatorHz);
-constexpr uint32_t kBitrate = 1000000;
-
+Config config;
+Bus bus;
 bool ready = false;
 Frame frame;
 bool waitingToSend = false;
 
 void setup() {
     Serial.begin(115200);
-    SPI.begin(); // Uses this board core's default SPI pins.
-    Config config;
-    config.bitrate = kBitrate;
-    ready = controller.begin(config) == Result::Ok;
-    if (!ready) Serial.println("CAN initialization failed");
+    config.bitrate = 1000000;
+    config.spi = &SPI;
+    config.csPin = SS;
+    config.oscillatorHz = 40000000;
+    SPI.begin(); // Configure SPI pins here first if your wiring uses other pins.
+
+    const Result result = bus.begin(config);
+    ready = result == Result::Ok;
+    if (!ready) Serial.println(toString(result));
 }
 
 void loop() {
     if (!ready) return;
-
     if (!waitingToSend) {
-        if (controller.receive(frame) != Result::Ok) return;
+        if (bus.receive(frame) != Result::Ok) return;
         waitingToSend = true;
     }
-
-    const Result result = controller.send(frame);
-    if (result == Result::Busy) return; // Keep the frame and retry next loop.
+    const Result result = bus.send(frame);
+    if (result == Result::Busy) return;
     if (result != Result::Ok) {
-        Serial.println("CAN send failed");
+        Serial.println(toString(result));
         ready = false;
         return;
     }

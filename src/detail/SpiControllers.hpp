@@ -12,7 +12,7 @@ class Mcp2515 final : public Controller {
 public:
     Mcp2515(SPIClass &spi, std::uint8_t cs, std::uint32_t oscillatorHz)
         : driver_(cs, spi, 255), oscillator_(oscillatorHz) {}
-    Result begin(const Config &c) override {
+    Result begin(const CommonConfig &c) override {
         if (started_) return Result::AlreadyStarted;
         if (!c.bitrate || !oscillator_) return Result::InvalidConfig;
         ACAN2515Settings settings(oscillator_, c.bitrate);
@@ -57,7 +57,7 @@ class Mcp2518 final : public Controller {
 public:
     Mcp2518(SPIClass &spi, std::uint8_t cs, std::uint32_t oscillatorHz)
         : driver_(cs, spi, 255), oscillator_(oscillatorHz) {}
-    Result begin(const Config &c) override {
+    Result begin(const CommonConfig &c) override {
         if (started_) return Result::AlreadyStarted;
         if (!c.bitrate) return Result::InvalidConfig;
         ACAN2517FDSettings::Oscillator osc;

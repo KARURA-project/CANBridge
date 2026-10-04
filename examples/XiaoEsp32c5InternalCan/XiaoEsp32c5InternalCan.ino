@@ -1,38 +1,34 @@
-// XiaoEsp32c5 / InternalCan: Classic CAN echo.
 #include <Arduino.h>
-#include <CANBridge.h>
+#include <CANBridge/EspCan.h>
 using namespace canbridge;
 
-// Match these settings to your wiring and module.
-constexpr int kTxPin = D0;
-constexpr int kRxPin = D1;
-EspCan controller(kTxPin, kRxPin);
-constexpr uint32_t kBitrate = 1000000;
-
+Config config;
+Bus bus;
 bool ready = false;
 Frame frame;
 bool waitingToSend = false;
 
 void setup() {
     Serial.begin(115200);
-    Config config;
-    config.bitrate = kBitrate;
-    ready = controller.begin(config) == Result::Ok;
-    if (!ready) Serial.println("CAN initialization failed");
+    config.bitrate = 1000000;
+    config.txPin = D0;
+    config.rxPin = D1;
+
+    const Result result = bus.begin(config);
+    ready = result == Result::Ok;
+    if (!ready) Serial.println(toString(result));
 }
 
 void loop() {
     if (!ready) return;
-
     if (!waitingToSend) {
-        if (controller.receive(frame) != Result::Ok) return;
+        if (bus.receive(frame) != Result::Ok) return;
         waitingToSend = true;
     }
-
-    const Result result = controller.send(frame);
-    if (result == Result::Busy) return; // Keep the frame and retry next loop.
+    const Result result = bus.send(frame);
+    if (result == Result::Busy) return;
     if (result != Result::Ok) {
-        Serial.println("CAN send failed");
+        Serial.println(toString(result));
         ready = false;
         return;
     }

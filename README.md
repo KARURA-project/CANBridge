@@ -49,31 +49,57 @@ PlatformIOでも自己完結したZIPを `lib_deps` に指定できます。
 
 ## 共通API
 
+内蔵CANの設定例:
+
 ```cpp
-#include <CANBridge.h>
-using namespace canbridge;
-EspCan controller(txPin, rxPin);             // ESP内蔵CAN
-// Mcp2515 controller(SPI, csPin, 16000000);  // モジュールの実際の発振器周波数
-// Mcp2518 controller(SPI, csPin, 40000000);
-Config config;
-config.bitrate = 1000000;
-controller.begin(config);
-Frame frame;
-controller.receive(frame);
-controller.send(frame);
-Health health;
-controller.pollHealth(health);
+#include <CANBridge/EspCan.h>
+canbridge::Config config;
+canbridge::Bus bus;
+
+void setup() {
+    config.bitrate = 1000000;
+    config.txPin = D0;
+    config.rxPin = D1;
+    const auto result = bus.begin(config);
+    if (result != canbridge::Result::Ok) Serial.println(canbridge::toString(result));
+}
 ```
 
+SPI接続の設定例:
+
+```cpp
+#include <CANBridge/Mcp2515.h>
+canbridge::Config config;
+canbridge::Bus bus;
+
+void setup() {
+    config.bitrate = 1000000;
+    config.spi = &SPI;
+    config.csPin = SS;
+    config.oscillatorHz = 16000000;
+    SPI.begin();
+    const auto result = bus.begin(config);
+    if (result != canbridge::Result::Ok) Serial.println(canbridge::toString(result));
+}
+```
+
+MCP2518FDは `CANBridge/Mcp2518.h` を選びます。送受信は共通の
+`bus.receive(frame)` / `bus.send(frame)` / `bus.pollHealth(health)` を使います。
+1つの翻訳単位ではコントローラー選択ヘッダーを1つだけincludeしてください。
+`CANBridge.h` は共通のフレーム・結果型のみを公開します。
+
+必須項目はすべて未指定で初期化されます。通信速度・発振器周波数は0、ピンは-1、
+SPIはnullptrが未指定です。通常モード（listenOnly=false）は任意項目の既定値です。
+`begin(config)` は必須項目を順に検査し、最初の不足を具体的なResultと文字列で返します。
+設定検査が通るまでドライバーの生成・ハードウェア初期化を行いません。
+その実装に存在しない項目はConfig型にないためコンパイルエラーになります。
+`SPI.begin()` 済みか、実際の配線・発振器が設定と一致するかは共通には検出できません。
+
 `Frame` は `id / length / data[8] / extended / remote`。
-`Controller&` を使えばアプリ側の通信コードは実装に依存しません。
-生成時のピン・SPI・発振器設定だけを変えます。
 SPIのピン設定と `SPI.begin()` はアプリ側で行います。外付け実装はポーリング方式です。
 外付けのINTピンは使用せず、割り込み関数も不要です。
-`receive()` と `pollHealth()` は頻繁に呼び出してください。
-MCP2518FDの発振器は4/20/40 MHzを受け付けます。PLL設定は初版では公開していません。
+MCP2518FDの発振器は4/20/40 MHzを受け付けます。
 ESP旧APIは125/250/500/1000 kbit/s、新APIと外付けは基盤のタイミング計算に従います。
-非対応設定は成功扱いにしません。
 
 ### 結果と所有権
 
@@ -110,3 +136,12 @@ ESPはArduinoコア同梱の公式ESP-IDF TWAIドライバーを直接使用し�
 仕様資料: [ESP TWAI](https://docs.espressif.com/projects/esp-idf/en/v5.5.3/esp32c5/api-reference/peripherals/twai.html)、
 [ACAN2515](https://github.com/pierremolinaro/acan2515)、
 [ACAN2517FD](https://github.com/pierremolinaro/acan2517FD)。
+
+## srcのヘッダー
+
+- `CANBridge/EspCan.h`・`Mcp2515.h`・`Mcp2518.h`: 利用者向けの実装選択入口。
+- `CANBridge.h`: 共通のFrame・Result・Health型。
+- `detail/`: 設定検査、共通Bus、内部のコントローラー実装。
+- `ACAN*.h`・`MCP2515ReceiveFilters.h`: サブモジュール内のヘッダーへの短い転送ファイル。
+  Arduinoの依存ヘッダー検索に必要で、利用者が直接includeする必要はありません。
+- `vendor_*.cpp`: 元の依存ソースをこのライブラリからビルドする入口。

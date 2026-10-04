@@ -24,7 +24,7 @@ class EspCan final : public Controller {
 #endif
 public:
     EspCan(int txPin,int rxPin):tx_(txPin),rx_(rxPin) {}
-    Result begin(const Config &) override;
+    Result begin(const CommonConfig &) override;
     Result end() override;
     Result send(const Frame &) override;
     Result receive(Frame &) override;
