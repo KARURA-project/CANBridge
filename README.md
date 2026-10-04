@@ -30,7 +30,14 @@ git clone --recurse-submodules https://github.com/KARURA-project/KaruraCAN.git
 Arduino IDEは、リリース添付の `KaruraCAN.zip` を「ZIP形式のライブラリをインストール」で読み込んでください。
 これには固定された依存ソース・ライセンスを含み、追加ライブラリのインストールは不要です。
 開発チェックアウトからは `python3 scripts/package.py` で同じZIPを作成できます。
-PlatformIOでもこの自己完結したZIPを `lib_deps` に指定できます。
+PlatformIO 6.1.18はGit依存を再帰取得するため、認証できる環境なら次の指定1つで利用できます。
+
+```ini
+lib_deps = https://github.com/KARURA-project/KaruraCAN.git
+```
+
+再現性を保つ場合は末尾に `#タグ名` または `#コミットSHA` を指定してください。
+PlatformIOでも自己完結したZIPを `lib_deps` に指定できます。
 ローカルの再帰取得済みリポジトリは `KaruraCAN=symlink:///absolute/path/KaruraCAN` で使えます。
 ボードのArduinoコア・SPI実装は開発環境側の依存です。
 
