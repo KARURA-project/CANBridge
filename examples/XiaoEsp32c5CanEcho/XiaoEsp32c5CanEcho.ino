@@ -1,5 +1,5 @@
 // Board: XiaoEsp32c5. Set pins/crystal below to match your wiring.
-#include <KaruraCAN.h>
+#include <CANBridge.h>
 using namespace karura::can;
 #ifdef ARDUINO_ARCH_ESP32
 EspCan controller(1, 2); // Change to the actual TX/RX GPIOs on your board.

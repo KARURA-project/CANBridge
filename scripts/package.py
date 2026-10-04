@@ -11,7 +11,7 @@ for folder in ['src','examples','third_party/acan2515/src','third_party/acan2517
     files.extend(str(p.relative_to(root)) for p in (root/folder).rglob('*') if p.is_file())
 for lib in ['acan2515','acan2517FD']:
     files.extend(str(p.relative_to(root)) for p in (root/'third_party'/lib).glob('*') if p.is_file() and 'license' in p.name.lower())
-output=root/'dist/KaruraCAN.zip';output.parent.mkdir(exist_ok=True)
+output=root/'dist/CANBridge.zip';output.parent.mkdir(exist_ok=True)
 with zipfile.ZipFile(output,'w',zipfile.ZIP_DEFLATED) as z:
-    for f in files:z.write(root/f,'KaruraCAN/'+f)
+    for f in files:z.write(root/f,'CANBridge/'+f)
 print(output)

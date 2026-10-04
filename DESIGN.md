@@ -29,7 +29,7 @@ routing and preserving independent controller instances.
 
 MCP2515 / MCP2518FD underlying drivers are read-only pinned submodules.
 Tiny build forwarding sources compile their original source files as part of
-KaruraCAN. Neither Arduino nor PlatformIO users need separately installed ACAN
+CANBridge. Neither Arduino nor PlatformIO users need separately installed ACAN
 libraries. ESP-IDF driver code belongs to the Arduino board framework and is
 not duplicated as a second independent SDK checkout.
 
@@ -40,7 +40,7 @@ MCP2515 EFLG, MCP2518FD TREC, ESP cumulative bus-error count.
 A nonzero receive-loss report requests application-level recovery. Upstream
 peak counts and overflow indicators are inspected where available, but lack of
 an indicator is not proof of continuous reception. Bus-off/error-passive fields
-are controller current state; silicon recovery behavior may differ. KaruraCAN
+are controller current state; silicon recovery behavior may differ. CANBridge
 issues no automatic software recovery and never resumes application commands.
 
 ## Distribution

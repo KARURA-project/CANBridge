@@ -1,6 +1,6 @@
 {
-  "name": "KaruraCAN",
-  "version": "0.1.0",
+  "name": "CANBridge",
+  "version": "0.1.1",
   "frameworks": "arduino",
   "platforms": [
     "espressif32",

@@ -1,4 +1,4 @@
-#include <KaruraCAN.h>
+#include <CANBridge.h>
 using namespace karura::can;
 #if defined(TEST_MCP2515)
 Mcp2515 controller(SPI, 17, 16000000);

@@ -6,7 +6,7 @@ transceiver compatibility, SPI signal integrity or loss-free operation.
 ## Passed
 
 GitHub Actions run 37195523026 (commit 808ee9d):
-https://github.com/KARURA-project/KaruraCAN/actions/runs/37195523026
+https://github.com/KARURA-project/CANBridge/actions/runs/37195523026
 
 - Host frame validation: standard/extended ID and payload bounds.
 - XIAO ESP32S3: internal TWAI, MCP2515, MCP2518FD.

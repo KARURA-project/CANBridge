@@ -1,4 +1,4 @@
-#include <KaruraCAN.h>
+#include <CANBridge.h>
 #include <cassert>
 using namespace karura::can;
 int main() {

@@ -1,4 +1,4 @@
-# KaruraCAN
+# CANBridge
 
 モーターに依存しない、Arduino向けの統合 **Classic CAN** ライブラリです。
 ESP内蔵TWAI・MCP2515・MCP2518FDで同じフレームと送受信APIを使います。
@@ -23,28 +23,28 @@ RP系はArduino-Pico（Earle Philhower）を対象とします。
 開発用は必ずサブモジュールを含めて取得してください。
 
 ```sh
-git clone --recurse-submodules https://github.com/KARURA-project/KaruraCAN.git
+git clone --recurse-submodules https://github.com/KARURA-project/CANBridge.git
 ```
 
 通常のGitHub「Download ZIP」にはサブモジュールの中身が含まれません。
-Arduino IDEは、リリース添付の `KaruraCAN.zip` を「ZIP形式のライブラリをインストール」で読み込んでください。
+Arduino IDEは、リリース添付の `CANBridge.zip` を「ZIP形式のライブラリをインストール」で読み込んでください。
 これには固定された依存ソース・ライセンスを含み、追加ライブラリのインストールは不要です。
 開発チェックアウトからは `python3 scripts/package.py` で同じZIPを作成できます。
 PlatformIO 6.1.18はGit依存を再帰取得するため、認証できる環境なら次の指定1つで利用できます。
 
 ```ini
-lib_deps = https://github.com/KARURA-project/KaruraCAN.git
+lib_deps = https://github.com/KARURA-project/CANBridge.git
 ```
 
 再現性を保つ場合は末尾に `#タグ名` または `#コミットSHA` を指定してください。
 PlatformIOでも自己完結したZIPを `lib_deps` に指定できます。
-ローカルの再帰取得済みリポジトリは `KaruraCAN=symlink:///absolute/path/KaruraCAN` で使えます。
+ローカルの再帰取得済みリポジトリは `CANBridge=symlink:///absolute/path/CANBridge` で使えます。
 ボードのArduinoコア・SPI実装は開発環境側の依存です。
 
 ## 共通API
 
 ```cpp
-#include <KaruraCAN.h>
+#include <CANBridge.h>
 using namespace karura::can;
 EspCan controller(txPin, rxPin);             // ESP内蔵CAN
 // Mcp2515 controller(SPI, csPin, 16000000);  // モジュールの実際の発振器周波数
