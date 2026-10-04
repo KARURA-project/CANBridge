@@ -41,6 +41,12 @@ PlatformIOでも自己完結したZIPを `lib_deps` に指定できます。
 ローカルの再帰取得済みリポジトリは `CANBridge=symlink:///absolute/path/CANBridge` で使えます。
 ボードのArduinoコア・SPI実装は開発環境側の依存です。
 
+## サンプル
+
+[examples](examples/README.md) にボードとコントローラーの組み合わせごとの
+短いサンプルを12個用意しています。各サンプルには構成選択のプリプロセッサ分岐がなく、
+初期化・受信・送信だけを示します。通信状態の監視と復旧は用途に合わせてアプリ側へ追加します。
+
 ## 共通API
 
 ```cpp
