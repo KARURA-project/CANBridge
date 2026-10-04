@@ -16,7 +16,7 @@ CAN FDのデータフレームは初版の対象外です。MCP2518FDとC5もCla
 
 RP系はArduino-Pico（Earle Philhower）を対象とします。
 対応実装と実機検証は別です。現時点で実機での通信確認はしていません。
-ビルド結果は [VALIDATION.md](VALIDATION.md) に記録します。
+対象5ボードの計12構成でビルドを確認しています。実機通信は未確認です。
 
 ## インストール
 
@@ -29,7 +29,7 @@ git clone --recurse-submodules https://github.com/KARURA-project/CANBridge.git
 通常のGitHub「Download ZIP」にはサブモジュールの中身が含まれません。
 Arduino IDEは、リリース添付の `CANBridge.zip` を「ZIP形式のライブラリをインストール」で読み込んでください。
 これには固定された依存ソース・ライセンスを含み、追加ライブラリのインストールは不要です。
-開発チェックアウトからは `python3 scripts/package.py` で同じZIPを作成できます。
+
 PlatformIO 6.1.18はGit依存を再帰取得するため、認証できる環境なら次の指定1つで利用できます。
 
 ```ini
@@ -45,7 +45,7 @@ PlatformIOでも自己完結したZIPを `lib_deps` に指定できます。
 
 ```cpp
 #include <CANBridge.h>
-using namespace karura::can;
+using namespace canbridge;
 EspCan controller(txPin, rxPin);             // ESP内蔵CAN
 // Mcp2515 controller(SPI, csPin, 16000000);  // モジュールの実際の発振器周波数
 // Mcp2518 controller(SPI, csPin, 40000000);
@@ -100,13 +100,6 @@ ACAN2515 / ACAN2517FDをコミット固定のサブモジュールで読み込�
 ESPはArduinoコア同梱の公式ESP-IDF TWAIドライバーを直接使用します。
 受信欠落の観測や送信バッファ寿命を保つため、別のESPラッパーは使用しません。
 依存更新時はサブモジュールのコミット、ビルド、ライセンスをまとめて確認します。
-
-```sh
-c++ -std=c++11 -Isrc tests/frame.cpp -o /tmp/can-frame-test
-/tmp/can-frame-test
-pio run -d tests/embedded
-python3 scripts/package.py
-```
 
 仕様資料: [ESP TWAI](https://docs.espressif.com/projects/esp-idf/en/v5.5.3/esp32c5/api-reference/peripherals/twai.html)、
 [ACAN2515](https://github.com/pierremolinaro/acan2515)、

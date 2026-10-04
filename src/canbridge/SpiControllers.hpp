@@ -2,7 +2,7 @@
 #include "Types.hpp"
 #include <ACAN2515.h>
 #include <ACAN2517FD.h>
-namespace karura { namespace can {
+namespace canbridge {
 // Polling mode: no user ISR and no library-global singleton needed.
 // Configure the SPI pins and call SPI.begin() before begin().
 class Mcp2515 final : public Controller {
@@ -103,4 +103,4 @@ public:
         return Result::Ok;
     }
 };
-} }
+}

@@ -10,7 +10,7 @@
 #else
 #include <driver/twai.h>
 #endif
-namespace karura { namespace can {
+namespace canbridge {
 class EspCan final : public Controller {
     int tx_,rx_;
     bool started_=false;
@@ -30,4 +30,4 @@ public:
     Result receive(Frame &) override;
     Result pollHealth(Health &) override;
 };
-} }
+}

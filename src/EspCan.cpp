@@ -1,6 +1,6 @@
 #ifdef ARDUINO_ARCH_ESP32
-#include "karura_can/EspCan.hpp"
-namespace karura { namespace can {
+#include "canbridge/EspCan.hpp"
+namespace canbridge {
 Result EspCan::begin(const Config &c) {
     if(started_) return Result::AlreadyStarted;
     if(tx_<0 || rx_<0 || !c.bitrate) return Result::InvalidConfig;
@@ -115,5 +115,5 @@ bool EspCan::onReceive(twai_node_handle_t node,const twai_rx_done_event_data_t *
     return woken==pdTRUE;
 }
 #endif
-} }
+}
 #endif

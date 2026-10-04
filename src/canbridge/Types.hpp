@@ -1,7 +1,7 @@
 #pragma once
 #include <array>
 #include <cstdint>
-namespace karura { namespace can {
+namespace canbridge {
 struct Frame {
     std::uint32_t id = 0;
     std::uint8_t length = 0;
@@ -37,4 +37,4 @@ public:
 protected:
     Controller() = default;
 };
-} }
+}
