@@ -15,7 +15,7 @@
       [
         "0x303a",
         "0x1001"
-      ] 
+      ]
     ],
     "mcu": "esp32c5",
     "variant": "XIAO_ESP32C5"

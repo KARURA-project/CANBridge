@@ -6,11 +6,6 @@
     "espressif32",
     "raspberrypi"
   ],
-  "build": {
-    "flags": [
-      "-std=gnu++11"
-    ]
-  },
   "export": {
     "include": [
       "src",

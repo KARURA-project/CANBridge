@@ -18,3 +18,18 @@ jobs:
         with:
           name: KaruraCAN
           path: dist/KaruraCAN.zip
+  boards:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        target: [c5, c5_mcp2515, c5_mcp2518, pico, pico_mcp2518, pico2, pico2_mcp2518, xiao_rp2350, xiao_rp2350_mcp2518]
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: pip install platformio==6.1.18
+      - run: pio run -d tests/embedded -e ${{ matrix.target }}
