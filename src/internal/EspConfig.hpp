@@ -1,5 +1,5 @@
 #pragma once
-#include "Types.hpp"
+#include "../CANBridge/Types.h"
 namespace canbridge {
 struct EspConfig {
     std::uint32_t bitrate = 0;

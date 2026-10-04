@@ -6,9 +6,9 @@
 #ifndef ARDUINO_ARCH_ESP32
 #error "CANBridge/EspCan.h requires an Arduino ESP32 target"
 #endif
-#include "../detail/EspCan.hpp"
-#include "../detail/Configurations.hpp"
-#include "../detail/ConfiguredBus.hpp"
+#include "../drivers/esp/EspCan.hpp"
+#include "../internal/EspConfig.hpp"
+#include "../internal/ConfiguredBus.hpp"
 namespace canbridge {
 namespace detail {
 struct EspCanFactory {

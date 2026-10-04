@@ -3,9 +3,9 @@
 #error "Include only one CANBridge controller selection header per translation unit"
 #endif
 #define CANBRIDGE_SELECTED_BACKEND 1
-#include "../detail/SpiControllers.hpp"
-#include "../detail/SpiConfiguration.hpp"
-#include "../detail/ConfiguredBus.hpp"
+#include "../drivers/mcp/SpiControllers.hpp"
+#include "../internal/SpiConfig.hpp"
+#include "../internal/ConfiguredBus.hpp"
 namespace canbridge {
 namespace detail {
 struct Mcp2518Factory {

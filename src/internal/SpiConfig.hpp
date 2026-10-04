@@ -1,5 +1,5 @@
 #pragma once
-#include "Types.hpp"
+#include "../CANBridge/Types.h"
 #include <SPI.h>
 namespace canbridge {
 struct SpiConfig {

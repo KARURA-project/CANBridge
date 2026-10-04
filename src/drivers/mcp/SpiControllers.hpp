@@ -1,5 +1,5 @@
 #pragma once
-#include "Types.hpp"
+#include "../../CANBridge/Types.h"
 #include <ACAN2515.h>
 #include <ACAN2517FD.h>
 namespace canbridge {

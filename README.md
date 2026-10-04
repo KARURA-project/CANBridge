@@ -16,7 +16,7 @@ CAN FDのデータフレームは初版の対象外です。MCP2518FDとC5もCla
 
 RP系はArduino-Pico（Earle Philhower）を対象とします。
 対応実装と実機検証は別です。現時点で実機での通信確認はしていません。
-対象5ボードの計12構成でビルドを確認しています。実機通信は未確認です。
+対象5ボードの計12構成は旧APIでビルドを確認しています。現在のAPIでの全構成ビルドと実機通信は未確認です。
 
 ## インストール
 
@@ -137,11 +137,29 @@ ESPはArduinoコア同梱の公式ESP-IDF TWAIドライバーを直接使用し�
 [ACAN2515](https://github.com/pierremolinaro/acan2515)、
 [ACAN2517FD](https://github.com/pierremolinaro/acan2517FD)。
 
-## srcのヘッダー
+## ディレクトリ構成
 
-- `CANBridge/EspCan.h`・`Mcp2515.h`・`Mcp2518.h`: 利用者向けの実装選択入口。
-- `CANBridge.h`: 共通のFrame・Result・Health型。
-- `detail/`: 設定検査、共通Bus、内部のコントローラー実装。
-- `ACAN*.h`・`MCP2515ReceiveFilters.h`: サブモジュール内のヘッダーへの短い転送ファイル。
-  Arduinoの依存ヘッダー検索に必要で、利用者が直接includeする必要はありません。
-- `vendor_*.cpp`: 元の依存ソースをこのライブラリからビルドする入口。
+```text
+src/
+  CANBridge.h            共通型を読み込む入口
+  CANBridge/             公開ヘッダー（共通型とコントローラー選択）
+  internal/              設定検査と共通Busの内部処理
+  drivers/
+    esp/                 ESP内蔵TWAIの実装
+    mcp/                 MCP2515・MCP2518FDの実装
+  dependencies/
+    acan2515/            ACAN2515ソースのビルド入口
+    acan2517FD/          ACAN2517FDソースのビルド入口
+  ACAN*.h など           依存ヘッダーへの転送ファイル
+examples/                ボード・コントローラー名を付けたサンプル
+third_party/             元の依存ライブラリ（固定コミットのサブモジュール）
+```
+
+利用者がincludeするのは `CANBridge/EspCan.h`、`CANBridge/Mcp2515.h`、
+`CANBridge/Mcp2518.h` のいずれかです。共通型だけを使う場合は `CANBridge.h` を使用できます。
+
+`src` 直下の `ACAN*.h` と `MCP2515ReceiveFilters.h` は、サブモジュール内の
+ヘッダーへ転送します。元ライブラリの山括弧形式のincludeをArduinoから解決するために
+この位置に置いています。利用者が直接includeする必要はありません。
+`dependencies/` は元ソースを読み込む短いビルド入口で、依存ライブラリ本体は
+`third_party/` に一度だけ置いています。

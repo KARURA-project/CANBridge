@@ -1,5 +1,5 @@
 #pragma once
-#include "Types.hpp"
+#include "../../CANBridge/Types.h"
 #include <Arduino.h>
 #include <atomic>
 #include <esp_idf_version.h>

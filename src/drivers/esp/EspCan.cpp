@@ -1,5 +1,5 @@
 #ifdef ARDUINO_ARCH_ESP32
-#include "detail/EspCan.hpp"
+#include "EspCan.hpp"
 namespace canbridge {
 Result EspCan::begin(const CommonConfig &c) {
     if(started_) return Result::AlreadyStarted;
