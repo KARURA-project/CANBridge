@@ -1,0 +1,5 @@
+00:23:50.797 -> DIAG access: Passed; Ok; raw=0x00000000
+00:23:50.797 -> DIAG operation: Passed; Ok; raw=0x00000000
+00:23:50.797 -> DIAG loopback: Passed; Ok; raw=0x00000000
+00:23:50.797 -> DIAG cleanup: Passed; Ok; raw=0x00000000
+00:23:50.797 -> DIAG result: Ok; frames=4

@@ -12,9 +12,11 @@ struct Frame {
 enum class Result { Ok, Empty, Busy, NotStarted, AlreadyStarted,
     InvalidFrame, InvalidConfig, Unsupported, DriverError,
     MissingBitrate, MissingTxPin, MissingRxPin, MissingSpi, MissingCsPin,
-    MissingOscillator, InvalidPin, UnsupportedOscillator, AllocationFailed };
+    MissingOscillator, InvalidPin, UnsupportedOscillator, AllocationFailed, Timeout, DataMismatch };
 inline const char *toString(Result r) {
     switch (r) {
+    case Result::Timeout: return "Diagnostic timed out";
+    case Result::DataMismatch: return "Diagnostic frame mismatch";
     case Result::Ok: return "Ok";
     case Result::Empty: return "No received frame";
     case Result::Busy: return "Transmit queue is busy";
@@ -36,6 +38,30 @@ inline const char *toString(Result r) {
     }
     return "Unknown CAN result";
 }
+enum class TestStatus { Passed, Failed, NotRun, Unsupported };
+inline const char *toString(TestStatus s) {
+    switch (s) {
+    case TestStatus::Passed: return "Passed";
+    case TestStatus::Failed: return "Failed";
+    case TestStatus::NotRun: return "Not run";
+    case TestStatus::Unsupported: return "Unsupported";
+    }
+    return "Unknown";
+}
+struct DiagnosticStep {
+    DiagnosticStep() = default;
+    DiagnosticStep(TestStatus s, Result r, std::uint32_t detail = 0) : status(s), reason(r), raw(detail) {}
+    TestStatus status = TestStatus::NotRun;
+    Result reason = Result::Ok;
+    std::uint32_t raw = 0; // Backend-specific detail; never interpret across backends.
+};
+struct DiagnosticReport {
+    DiagnosticStep controllerAccess;
+    DiagnosticStep controllerOperation;
+    DiagnosticStep internalLoopback;
+    DiagnosticStep cleanup;
+    std::uint32_t framesChecked = 0;
+};
 struct Health {
     bool busOff = false;
     bool errorPassive = false;

@@ -1,0 +1,16 @@
+Arduino-ESP32 3.3.10; ESP-IDF v5.5.4
+TEST TWAI0 (first allocation)
+DIAG access: Passed; Ok; raw=0x00000000
+DIAG operation: Passed; Ok; raw=0x00000000
+DIAG loopback: Passed; Ok; raw=0x00000000
+DIAG cleanup: Passed; Ok; raw=0x00000000
+DIAG result: Ok; frames=4
+RESERVE TWAI0: 0x00000000 (not enabled, no transmission)
+TEST TWAI1 (TWAI0 reserved)
+DIAG access: Passed; Ok; raw=0x00000000
+DIAG operation: Passed; Ok; raw=0x00000000
+DIAG loopback: Passed; Ok; raw=0x00000000
+DIAG cleanup: Passed; Ok; raw=0x00000000
+DIAG result: Ok; frames=4
+RELEASE TWAI0: 0x00000000
+DONE

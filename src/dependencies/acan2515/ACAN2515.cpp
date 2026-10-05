@@ -423,13 +423,13 @@ uint16_t ACAN2515::setRequestedMode (const uint8_t inCANControlRegister) {
   mSPI.endTransaction () ;
 //--- Wait until requested mode is reached (during 1 or 2 ms)
   bool wait = true ;
-  const uint32_t deadline = millis () + 2 ;
+  const uint32_t start = millis () ;
   while (wait) {
     mSPI.beginTransaction (mSPISettings) ;
       const uint8_t actualMode = read2515Register (CANSTAT_REGISTER) & 0xE0 ;
     mSPI.endTransaction () ;
     wait = actualMode != (inCANControlRegister & 0xE0) ;
-    if (wait && (millis () >= deadline)) {
+    if (wait && (uint32_t(millis () - start) >= 2)) {
       errorCode |= kRequestedModeTimeOut ;
       wait = false ;
     }
@@ -448,7 +448,9 @@ uint16_t ACAN2515::changeModeOnTheFly (const ACAN2515Settings::RequestedMode inR
     const uint8_t currentMode = read2515Register (CANCTRL_REGISTER) ;
   mSPI.endTransaction () ;
 //--- New mode
-  const uint8_t newMode = (currentMode & 0x1F) | (uint8_t) inRequestedMode ;
+  // Shutdown must abort pending unacknowledged TX before confirming configuration mode.
+  const uint8_t abortTx = ((uint8_t) inRequestedMode == (4U << 5)) ? 0x10 : 0;
+  const uint8_t newMode = (currentMode & 0x1F) | (uint8_t) inRequestedMode | abortTx ;
 //--- Set new mode
   const uint16_t errorCode = setRequestedMode (newMode) ;
 //---
@@ -568,7 +570,7 @@ void ACAN2515::end (void) {
 
 #ifdef ARDUINO_ARCH_ESP32
   void ACAN2515::poll (void) {
-    while (isr_core ()) {}
+    isr_core (); // Core handles at most 64 events per call.
   }
 #endif
 
@@ -579,7 +581,7 @@ void ACAN2515::end (void) {
 #ifndef ARDUINO_ARCH_ESP32
   void ACAN2515::poll (void) {
     noInterrupts () ;
-      while (isr_core ()) {}
+      isr_core (); // Core handles at most 64 events per call.
     interrupts () ;
   }
 #endif
@@ -616,7 +618,7 @@ bool ACAN2515::isr_core (void) {
   bool handled = false ;
   mSPI.beginTransaction (mSPISettings) ;
   uint8_t itStatus = read2515Register (CANSTAT_REGISTER) & 0x0E ;
-  while (itStatus != 0) {
+  for (unsigned budget = 0; itStatus != 0 && budget < 64; ++budget) {
     handled = true ;
     switch (itStatus) {
     case 0 : // No interrupt

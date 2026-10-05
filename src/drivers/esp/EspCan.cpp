@@ -2,21 +2,26 @@
 #include "EspCan.hpp"
 namespace canbridge {
 Result EspCan::begin(const CommonConfig &c) {
-    if(started_) return Result::AlreadyStarted;
+    if(installed_) return Result::AlreadyStarted;
+    selfTest_=c.selfTest;
+    lastError_=ESP_OK;accessPassed_=false;
     if(tx_<0 || rx_<0 || !c.bitrate) return Result::InvalidConfig;
 #if ESP_IDF_VERSION >= ESP_IDF_VERSION_VAL(5,5,0)
     queue_=xQueueCreate(64,sizeof(Frame));
-    if(!queue_) return Result::DriverError;
+    if(!queue_) { lastError_=ESP_ERR_NO_MEM; return Result::AllocationFailed; }
     twai_onchip_node_config_t cfg{};
-    cfg.io_cfg.tx=static_cast<gpio_num_t>(tx_); cfg.io_cfg.rx=static_cast<gpio_num_t>(rx_);
+    cfg.io_cfg.tx=static_cast<gpio_num_t>(tx_); cfg.io_cfg.rx=static_cast<gpio_num_t>(c.selfTest ? tx_ : rx_);
     cfg.io_cfg.quanta_clk_out=GPIO_NUM_NC; cfg.io_cfg.bus_off_indicator=GPIO_NUM_NC;
     cfg.bit_timing.bitrate=c.bitrate; cfg.tx_queue_depth=1;
     cfg.flags.enable_listen_only=c.listenOnly;
-    if(twai_new_node_onchip(&cfg,&node_)!=ESP_OK) { vQueueDelete(queue_);queue_=nullptr; return Result::DriverError; }
+    cfg.flags.enable_self_test=c.selfTest;
+    cfg.flags.enable_loopback=c.selfTest;
+    if((lastError_=twai_new_node_onchip(&cfg,&node_))!=ESP_OK) { vQueueDelete(queue_);queue_=nullptr; return Result::DriverError; }
+    installed_=true;accessPassed_=true;
     loss_.store(false, std::memory_order_relaxed);
     twai_event_callbacks_t cb{}; cb.on_rx_done=onReceive;
-    if(twai_node_register_event_callbacks(node_,&cb,this)!=ESP_OK || twai_node_enable(node_)!=ESP_OK) {
-        twai_node_delete(node_);node_=nullptr;vQueueDelete(queue_);queue_=nullptr;return Result::DriverError;
+    if((lastError_=twai_node_register_event_callbacks(node_,&cb,this))!=ESP_OK || (lastError_=twai_node_enable(node_))!=ESP_OK) {
+        end();return Result::DriverError;
     }
 #else
     twai_timing_config_t timing{};
@@ -27,25 +32,44 @@ Result EspCan::begin(const CommonConfig &c) {
     case 125000: timing=TWAI_TIMING_CONFIG_125KBITS();break;
     default: return Result::Unsupported;
     }
-    twai_general_config_t cfg=TWAI_GENERAL_CONFIG_DEFAULT(static_cast<gpio_num_t>(tx_),static_cast<gpio_num_t>(rx_),c.listenOnly ? TWAI_MODE_LISTEN_ONLY : TWAI_MODE_NORMAL);
+    twai_general_config_t cfg=TWAI_GENERAL_CONFIG_DEFAULT(static_cast<gpio_num_t>(tx_),static_cast<gpio_num_t>(c.selfTest ? tx_ : rx_),c.selfTest ? TWAI_MODE_NO_ACK : c.listenOnly ? TWAI_MODE_LISTEN_ONLY : TWAI_MODE_NORMAL);
     cfg.rx_queue_len=64; cfg.tx_queue_len=8;
     twai_filter_config_t filter=TWAI_FILTER_CONFIG_ACCEPT_ALL();
-    if(twai_driver_install(&cfg,&timing,&filter)!=ESP_OK) return Result::DriverError;
-    if(twai_start()!=ESP_OK) {twai_driver_uninstall();return Result::DriverError;}
+    if((lastError_=twai_driver_install(&cfg,&timing,&filter))!=ESP_OK) return Result::DriverError;
+    installed_=true;accessPassed_=true;
+    if((lastError_=twai_start())!=ESP_OK) {end();return Result::DriverError;}
 #endif
-    started_=true;return Result::Ok;
+    enabled_=true;started_=true;return Result::Ok;
+}
+Result EspCan::beginDiagnostic(const CommonConfig &c, DiagnosticReport &report) {
+    Result result = begin(c);
+    if(result == Result::Ok) {
+        Health h;
+        result = pollHealth(h);
+        if(result == Result::Ok && (h.busOff || h.errorPassive)) result = Result::DriverError;
+    }
+    report.controllerAccess = {accessPassed_ ? TestStatus::Passed : result == Result::Unsupported ? TestStatus::NotRun : TestStatus::Failed,
+                               accessPassed_ ? Result::Ok : result, static_cast<std::uint32_t>(lastError_)};
+    return result;
 }
 Result EspCan::end() {
-    if(!started_) return Result::NotStarted;
+    if(!installed_) return Result::Ok;
 #if ESP_IDF_VERSION >= ESP_IDF_VERSION_VAL(5,5,0)
-    if(twai_node_disable(node_)!=ESP_OK) return Result::DriverError;
+    if(enabled_ && twai_node_disable(node_)!=ESP_OK) return Result::DriverError;
+    enabled_=false;started_=false;
     if(twai_node_delete(node_)!=ESP_OK) return Result::DriverError;
     node_=nullptr;vQueueDelete(queue_);queue_=nullptr;
 #else
-    if(twai_stop()!=ESP_OK) return Result::DriverError;
+    if(enabled_ && twai_stop()!=ESP_OK) {
+        twai_status_info_t status{};
+        if(twai_get_status_info(&status)!=ESP_OK || status.state!=TWAI_STATE_BUS_OFF) return Result::DriverError;
+    }
+    enabled_=false;started_=false;
     if(twai_driver_uninstall()!=ESP_OK) return Result::DriverError;
 #endif
-    started_=false;return Result::Ok;
+    installed_=false;
+    if(selfTest_) { pinMode(tx_, INPUT); selfTest_=false; }
+    return Result::Ok;
 }
 Result EspCan::send(const Frame &f) {
     if(!started_) return Result::NotStarted;
@@ -61,7 +85,7 @@ Result EspCan::send(const Frame &f) {
     txFrame_.buffer=txStorage_.data.data();txFrame_.buffer_len=f.length;
     err=twai_node_transmit(node_,&txFrame_,0);
 #else
-    twai_message_t m{};m.identifier=f.id;m.extd=f.extended;m.rtr=f.remote;m.data_length_code=f.length;
+    twai_message_t m{};m.self=selfTest_;m.identifier=f.id;m.extd=f.extended;m.rtr=f.remote;m.data_length_code=f.length;
     for(unsigned i=0;i<f.length;++i)m.data[i]=f.data[i];
     err=twai_transmit(&m,0);
 #endif
@@ -87,12 +111,12 @@ Result EspCan::pollHealth(Health &h) {
     h=Health{};
 #if ESP_IDF_VERSION >= ESP_IDF_VERSION_VAL(5,5,0)
     twai_node_status_t status{};twai_node_record_t record{};
-    if(twai_node_get_info(node_,&status,&record)!=ESP_OK)return Result::DriverError;
+    if((lastError_=twai_node_get_info(node_,&status,&record))!=ESP_OK)return Result::DriverError;
     h.busOff=status.state==TWAI_ERROR_BUS_OFF;h.errorPassive=status.state==TWAI_ERROR_PASSIVE;
     h.receiveLoss=loss_.load(std::memory_order_relaxed);h.raw=record.bus_err_num;
 #else
     twai_status_info_t s{};
-    if(twai_get_status_info(&s)!=ESP_OK)return Result::DriverError;
+    if((lastError_=twai_get_status_info(&s))!=ESP_OK)return Result::DriverError;
     h.busOff=s.state==TWAI_STATE_BUS_OFF;
     h.errorPassive=s.tx_error_counter>=128 || s.rx_error_counter>=128;
     h.receiveLoss=s.rx_missed_count || s.rx_overrun_count;h.raw=s.bus_error_count;

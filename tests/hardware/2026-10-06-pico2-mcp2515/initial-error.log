@@ -1,0 +1,6 @@
+BOOT: serial connected
+DIAG access: Passed; Ok; raw=0x00000002
+DIAG operation: Failed; CAN driver initialization or operation failed; raw=0x00000002
+DIAG loopback: Not run; Ok; raw=0x00000000
+DIAG cleanup: Passed; Ok; raw=0x00000000
+DIAG result: CAN driver initialization or operation failed; frames=0

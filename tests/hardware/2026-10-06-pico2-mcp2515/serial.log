@@ -1,0 +1,6 @@
+00:38:28.643 -> BOOT: serial connected
+00:38:28.643 -> DIAG access: Passed; Ok; raw=0x00000000
+00:38:28.643 -> DIAG operation: Passed; Ok; raw=0x00000000
+00:38:28.643 -> DIAG loopback: Passed; Ok; raw=0x00000000
+00:38:28.643 -> DIAG cleanup: Passed; Ok; raw=0x00000000
+00:38:28.643 -> DIAG result: Ok; frames=4

@@ -1,54 +1,100 @@
-# Examples
+# CANBridge試験サンプル
 
-Each example selects exactly one board/controller combination without preprocessor
-branches or commented-out alternative implementations. Open its `.ino`, select the
-board in Arduino IDE, and adjust the visible wiring/bitrate settings.
+まずCANコントローラーの行と、試したい機能の列からサンプルを選んでください。
+ボードごとのコピーはありません。各スケッチ先頭のピン・通信速度・水晶周波数を
+実物に合わせて変更し、Arduino IDEで自分のボードを選んでビルドします。
 
-| Board | CAN controller | Sketch |
-| --- | --- | --- |
-| XiaoEsp32s3 | InternalCan | [XiaoEsp32s3InternalCan](XiaoEsp32s3InternalCan/XiaoEsp32s3InternalCan.ino) |
-| XiaoEsp32s3 | Mcp2515 | [XiaoEsp32s3Mcp2515](XiaoEsp32s3Mcp2515/XiaoEsp32s3Mcp2515.ino) |
-| XiaoEsp32s3 | Mcp2518 | [XiaoEsp32s3Mcp2518](XiaoEsp32s3Mcp2518/XiaoEsp32s3Mcp2518.ino) |
-| XiaoEsp32c5 | InternalCan | [XiaoEsp32c5InternalCan](XiaoEsp32c5InternalCan/XiaoEsp32c5InternalCan.ino) |
-| XiaoEsp32c5 | Mcp2515 | [XiaoEsp32c5Mcp2515](XiaoEsp32c5Mcp2515/XiaoEsp32c5Mcp2515.ino) |
-| XiaoEsp32c5 | Mcp2518 | [XiaoEsp32c5Mcp2518](XiaoEsp32c5Mcp2518/XiaoEsp32c5Mcp2518.ino) |
-| XiaoRp2350 | Mcp2515 | [XiaoRp2350Mcp2515](XiaoRp2350Mcp2515/XiaoRp2350Mcp2515.ino) |
-| XiaoRp2350 | Mcp2518 | [XiaoRp2350Mcp2518](XiaoRp2350Mcp2518/XiaoRp2350Mcp2518.ino) |
-| RaspberryPiPico | Mcp2515 | [RaspberryPiPicoMcp2515](RaspberryPiPicoMcp2515/RaspberryPiPicoMcp2515.ino) |
-| RaspberryPiPico | Mcp2518 | [RaspberryPiPicoMcp2518](RaspberryPiPicoMcp2518/RaspberryPiPicoMcp2518.ino) |
-| RaspberryPiPico2 | Mcp2515 | [RaspberryPiPico2Mcp2515](RaspberryPiPico2Mcp2515/RaspberryPiPico2Mcp2515.ino) |
-| RaspberryPiPico2 | Mcp2518 | [RaspberryPiPico2Mcp2518](RaspberryPiPico2Mcp2518/RaspberryPiPico2Mcp2518.ino) |
+| コントローラー | 受信をそのまま返信 | 周期送信＋受信表示 | 手入力送信＋受信表示 | 単体診断 |
+| --- | --- | --- | --- | --- |
+| InternalCan | [Echo](InternalCanEcho/InternalCanEcho.ino) | [Periodic](InternalCanPeriodic/InternalCanPeriodic.ino) | [SerialInput](InternalCanSerialInput/InternalCanSerialInput.ino) | [Diagnostic](InternalCanDiagnostic/InternalCanDiagnostic.ino) |
+| Mcp2515 | [Echo](Mcp2515Echo/Mcp2515Echo.ino) | [Periodic](Mcp2515Periodic/Mcp2515Periodic.ino) | [SerialInput](Mcp2515SerialInput/Mcp2515SerialInput.ino) | [Diagnostic](Mcp2515Diagnostic/Mcp2515Diagnostic.ino) |
+| Mcp2518 | [Echo](Mcp2518Echo/Mcp2518Echo.ino) | [Periodic](Mcp2518Periodic/Mcp2518Periodic.ino) | [SerialInput](Mcp2518SerialInput/Mcp2518SerialInput.ino) | [Diagnostic](Mcp2518Diagnostic/Mcp2518Diagnostic.ino) |
 
-## Wiring settings
+- InternalCan: XIAO ESP32S3 / ESP32C5。外部通信時はトランシーバーが必要です。
+- Mcp2515 / Mcp2518: 上記ESPとXIAO RP2350 / Pico / Pico 2。
+- RP系はArduino-Pico、ESP系はArduino-ESP32を使用してください。
 
-- Internal CAN: TX is D0 and RX is D1. Connect a compatible external transceiver.
-- SPI controllers: use the board core's default SPI pins and SS for chip select.
-  Change `config.csPin` if needed. The external INT pin is not used (polling).
-- MCP2515 uses a 16 MHz crystal setting; MCP2518FD uses 40 MHz. Change
-  `config.oscillatorHz` to the actual module crystal frequency.
-- All examples use 1 Mbit/s Classic CAN; MCP2518FD examples do not enable CAN FD.
-- Supply the correct voltage, common ground and CAN termination for your hardware.
+## 開発を始める順序
 
-## Minimal flow
+1. Diagnosticでアクセス・動作・ループバック・終了を確認します。
+2. 2台をCAN接続し、一方をPeriodic、もう一方をEchoにして往復を確認します。
+3. SerialInputで必要なID・データを手入力して確認します。
+4. 自分のアプリへ、選択ヘッダー・Config/Bus宣言・初期設定を移します。
+   送受信はbus.send()/bus.receive()、状態確認はbus.pollHealth()を使います。
 
-Initialize, receive one frame, then echo it. While transmission returns Busy,
-keep that frame and retry without replacing it with another received frame.
-Initialization/send failures print a message and stop the example. Receive results
-other than Ok simply return to the next loop; these examples do not diagnose
-receive faults or perform health monitoring/recovery. For those, use
-`pollHealth(Health&)` as described in the library README.
+## 変更する場所
 
-These are short communication examples, not actuator safety templates. An echo
-requires another CAN node and can loop indefinitely if both nodes echo traffic.
-Serial baud is 115200. No physical hardware execution has been verified yet.
-For PlatformIO, place the chosen sketch contents in `src/main.cpp` and specify
-CANBridge as the library dependency; the code uses explicit setup/loop functions
-and needs no generated function declarations.
+各スケッチは「設定値 → 共通宣言 → 初期化 → loop」の順です。
+SPIのSCK/MISO/MOSI/CSは最初から明示しています。RPはsetSCK/setMISO/setMOSIの
+戻り値を確認してからbegin()、ESPはbegin(SCK, MISO, MOSI)で設定します。
+この数行だけをプリプロセッサで分岐し、送受信処理は共通です。
+RPでは各SPIバスに対応するピンを選んでください。CSはCANドライバーが制御します。
+Periodicはrunner.periodMsとrunner.periodicIdで周期・IDを変更できます。
 
-Each selected controller header supplies `canbridge::Config` and `canbridge::Bus`.
-Required settings are written with `config.` in setup; none default to a working
-hardware configuration. Initialization errors print `toString(result)`, which
-identifies missing settings. The loop is identical in all twelve examples.
+Runnerはサンプル用の共通補助処理で、CANBridge/Examples.hにあります。
+通常のアプリはRunnerを使わず、共通のBus APIを直接呼べます。
 
-Include `CANBridge.h` before the selected controller header. Arduino discovers the
-library from this root header; the nested controller header alone is insufficient.
+## Setup
+
+Open the matching sketch, select its board and adjust bitrate/pins/crystal.
+Internal CAN defaults to D0 TX / D1 RX. SPI uses the default SPI pins, SS,
+16 MHz for MCP2515 and 40 MHz for MCP2518FD; call SPI.begin() before starting.
+SPI diagnostic still requires the powered CAN module and its SPI wiring.
+ESP diagnostic requires no external transceiver or jumper: it temporarily uses
+TX GPIO for both TX/RX, then releases the diagnostic output. The normal RX pin
+and external physical layer are not tested. Leave diagnostic TX unconnected.
+
+Serial is 115200. No sketch waits for the serial monitor; open it before reset
+to see startup output. The runner queues output and writes only when serial has
+space. If output cannot keep up, whole log lines are dropped and LOG dropped=N
+is reported. This is a low-rate connectivity test, not a lossless bus recorder.
+
+## Protocol and display
+
+Send one line, terminated by newline (CRLF also works):
+
+```text
+S 123#112233AABB
+E 001ABCDE#01020304
+S 123#
+S 123#R8
+```
+
+S/E select standard/extended ID. Hex ID is 1..3/1..8 digits and within CAN
+limits. Data is 0..8 bytes, two hex digits per byte; lowercase hex is accepted.
+R0..R8 selects an RTR frame with the requested DLC and no data bytes. Input
+buffer is 39 characters; overlong lines are rejected up to the next newline.
+Only one transmission can be pending; another complete input line is rejected
+while it is pending. Input and RX continue while TX returns Busy.
+
+Both display examples use identical formatting:
+
+```text
+TX accepted S 123#112233AABB
+RX S 123#112233AABB
+RX E 001ABCDE#01020304
+RX S 123#R8
+```
+
+IDs are uppercase and padded to 3/8 digits. Copy the part after RX into the input
+example to resend it. TX accepted means queued, not physical delivery or ACK.
+Health changes and operation errors are also logged. Echo does not print frames.
+
+## External communication test
+
+Use Periodic or SerialInput on one node and Echo on the other, with matching
+bitrate, compatible transceivers, common ground and correct termination. Observe
+TX and RX on the initiating node; no automatic external pass/fail is inferred.
+Do not run echo on both nodes: frames will circulate indefinitely. Use a dedicated
+test bus; echo and test frames can affect devices on a live actuator bus.
+
+## Diagnostic interpretation
+
+Passed loopback confirms the controller test path, not the transceiver, external
+CAN wiring, normal RX pin, or accuracy of the configured oscillator frequency.
+A wrong crystal setting may still pass internal loopback. Reported raw flags are
+backend-specific. If cleanup fails, stop and correct the hardware; begin/diagnose
+remain blocked until end() confirms shutdown. On success call begin(config)
+separately to start normal operation. Tests cover standard/extended data frames,
+zero/eight bytes and a remote frame. Runtime and memory tests on physical boards
+remain required; these examples do not certify hardware functionality.
