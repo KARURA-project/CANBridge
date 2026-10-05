@@ -55,6 +55,7 @@ PlatformIOでも自己完結したZIPを `lib_deps` に指定できます。
 内蔵CANの設定例:
 
 ```cpp
+#include <CANBridge.h>
 #include <CANBridge/EspCan.h>
 canbridge::Config config;
 canbridge::Bus bus;
@@ -72,6 +73,7 @@ void setup() {
 SPI接続の設定例:
 
 ```cpp
+#include <CANBridge.h>
 #include <CANBridge/Mcp2515.h>
 canbridge::Config config;
 canbridge::Bus bus;
@@ -90,6 +92,8 @@ void setup() {
 
 MCP2518FDは `CANBridge/Mcp2518.h` を選びます。送受信は共通の
 `bus.receive(frame)` / `bus.send(frame)` / `bus.pollHealth(health)` を使います。
+Arduinoのライブラリ検出のため、共通入口 `CANBridge.h` を先にincludeし、
+その次にコントローラー選択ヘッダーをincludeしてください。
 1つの翻訳単位ではコントローラー選択ヘッダーを1つだけincludeしてください。
 `CANBridge.h` は共通のFrame・Result・Health型を公開します。
 同じアプリケーション内では同じコントローラー選択ヘッダーを使用してください。
@@ -165,8 +169,8 @@ examples/                ボード・コントローラー名を付けたサン�
 third_party/             元の依存ライブラリ（固定コミットのサブモジュール）
 ```
 
-利用者がincludeするのは `CANBridge/EspCan.h`、`CANBridge/Mcp2515.h`、
-`CANBridge/Mcp2518.h` のいずれかです。共通型だけを使う場合は `CANBridge.h` を使用できます。
+利用者は最初に `CANBridge.h` をincludeし、次に `CANBridge/EspCan.h`、`CANBridge/Mcp2515.h`、
+`CANBridge/Mcp2518.h` のいずれかをincludeします。共通型だけなら `CANBridge.h` のみで使用できます。
 
 `src` 直下の `ACAN*.h` と `MCP2515ReceiveFilters.h` は、サブモジュール内の
 ヘッダーへ転送します。元ライブラリの山括弧形式のincludeをArduinoから解決するために

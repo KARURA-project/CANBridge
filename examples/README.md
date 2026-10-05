@@ -49,3 +49,6 @@ Each selected controller header supplies `canbridge::Config` and `canbridge::Bus
 Required settings are written with `config.` in setup; none default to a working
 hardware configuration. Initialization errors print `toString(result)`, which
 identifies missing settings. The loop is identical in all twelve examples.
+
+Include `CANBridge.h` before the selected controller header. Arduino discovers the
+library from this root header; the nested controller header alone is insufficient.

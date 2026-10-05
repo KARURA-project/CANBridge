@@ -1,4 +1,5 @@
 #include <Arduino.h>
+#include <CANBridge.h>
 #include <CANBridge/EspCan.h>
 using namespace canbridge;
 

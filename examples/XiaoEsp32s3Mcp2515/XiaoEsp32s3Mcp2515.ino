@@ -1,4 +1,5 @@
 #include <Arduino.h>
+#include <CANBridge.h>
 #include <CANBridge/Mcp2515.h>
 using namespace canbridge;
 
