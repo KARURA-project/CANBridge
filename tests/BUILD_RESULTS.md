@@ -28,8 +28,9 @@ x86 ctags was bypassed with tools.ctags.cmd.path=/usr/bin/true; these sketches
 need no generated function declarations. PlatformIO used the same working
 repository through a symlink library dependency.
 
-Hardware internal diagnostics passed on S3, both C5 controllers, and Pico 2 + MCP2515.
-Other configurations, SPI disconnection behavior, cleanup/restart under actual faults,
-and external CAN traffic remain unverified.
+Hardware internal diagnostics passed on S3, both C5 controllers, and Pico 2 + MCP2515/MCP2518.
+On 2026-10-07, S3 Periodic/SerialInput against Pico 2 + MCP2518 Echo passed at 500 kbps,
+including peer power disconnection/reconnection. See VALIDATION.md for tested frame types.
+Other configurations, reverse roles, SPI disconnection and bus-off recovery remain unverified.
 Use the hardware checklist in tests/README.md before treating these as validated
 hardware diagnostics.

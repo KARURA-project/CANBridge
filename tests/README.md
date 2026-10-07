@@ -30,8 +30,10 @@ a local symlink library dependency. All examples declare setup/loop explicitly.
 
 The implementation is checked against Arduino-Pico 5.5.1, Arduino-ESP32 2.0.17
 (legacy TWAI on S3), and Arduino-ESP32 3.3.10 (new TWAI on S3/C5).
-Internal diagnostics passed on S3, both C5 TWAI controllers, and Pico 2 + MCP2515 (8 MHz, 500 kbps).
-Other SPI configurations and external communication tests remain outstanding.
+Internal diagnostics passed on S3, both C5 TWAI controllers, and Pico 2 with MCP2515/MCP2518.
+S3 Periodic/SerialInput against Pico 2 + MCP2518 Echo passed at 500 kbps, including
+standard/extended/data/RTR frames and peer power disconnection/reconnection.
+Other configurations, reverse Periodic/Echo roles and bus-off recovery remain unverified.
 Use [C5TwoControllers](hardware/C5TwoControllers/README.md) to check both C5 controllers.
 
 ## Hardware acceptance checklist

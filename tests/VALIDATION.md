@@ -1,14 +1,17 @@
 # 検証状況
 
-最終更新: 2026-10-06（日本時間）
+最終更新: 2026-10-07（日本時間）
 対象: feature/unified-diagnosticsで追加した実装（この記録を含むコミット）。
-実機試験時点は未コミット、基準HEAD: 9e3f50e。各試験のソース識別情報は実機記録を参照。
+2026-10-06の実機試験は未コミット時点（基準HEAD: 9e3f50e）。
+2026-10-07のMCP2518試験は記録時HEAD 9428695。各試験のソース識別情報は実機記録を参照。
 
 ビルド成功、PC上の模擬テスト成功、実機検証成功は別の結果です。
 全構成でビルド確認済みです。C5内蔵CANはTWAI0/TWAI1両基の単体診断が実機で各1回成功しています。
 S3内蔵CANの単体診断も実機で1回成功しています。
 Pico 2 + MCP2515（8 MHz、500 kbps、3.3 V給電）の単体診断も1回成功しています。
-外部通信とその他のSPI構成の実機試験は未実施です。
+Pico 2 + MCP2518（20 MHz、500 kbps）の単体診断も1回成功しています。
+S3内蔵CAN ↔ Pico 2 + MCP2518は500 kbpsで周期送信11フレームとシリアル入力6ケースの外部往復を確認。
+標準/拡張ID、データ0/2/4/8バイト、RTR DLC 0/8を試験。その他の構成の外部通信は未実施です。
 
 ## 構成別の実機検証
 
@@ -20,7 +23,7 @@ Pico 2 + MCP2515（8 MHz、500 kbps、3.3 V給電）の単体診断も1回成功
 
 | ボード | CAN | ビルド（4モード） | 単体診断 | 外部通信 | 異常・再起動 | 実機記録 |
 | --- | --- | --- | --- | --- | --- | --- |
-| XIAO ESP32S3 | 内蔵TWAI | 成功 | 成功（1回・コア版未確認） | 未実施 | 未実施 | [S3単体診断](hardware/2026-10-06-s3-internal/README.md) |
+| XIAO ESP32S3 | 内蔵TWAI | 成功 | 成功（1回・コア版未確認） | 成功（周期・入力・標準/拡張/RTR） | 一部成功（相手切断・再接続） | [S3単体診断](hardware/2026-10-06-s3-internal/README.md) |
 | XIAO ESP32S3 | MCP2515 | 成功 | 未実施 | 未実施 | 未実施 | — |
 | XIAO ESP32S3 | MCP2518FD | 成功 | 未実施 | 未実施 | 未実施 | — |
 | XIAO ESP32C5 | 内蔵TWAI | 成功 | 成功（両基各1回・コア3.3.10） | 未実施 | 未実施 | [C5両基診断](hardware/2026-10-06-c5-two-controllers/README.md) |
@@ -31,7 +34,7 @@ Pico 2 + MCP2515（8 MHz、500 kbps、3.3 V給電）の単体診断も1回成功
 | Raspberry Pi Pico | MCP2515 | 成功 | 未実施 | 未実施 | 未実施 | — |
 | Raspberry Pi Pico | MCP2518FD | 成功 | 未実施 | 未実施 | 未実施 | — |
 | Raspberry Pi Pico 2 | MCP2515 | 成功 | 成功（1回・8 MHz・500 kbps） | 未実施 | 未実施 | [Pico 2 + MCP2515](hardware/2026-10-06-pico2-mcp2515/README.md) |
-| Raspberry Pi Pico 2 | MCP2518FD | 成功 | 未実施 | 未実施 | 未実施 | — |
+| Raspberry Pi Pico 2 | MCP2518FD | 成功 | 成功（1回・20 MHz・500 kbps） | 成功（S3との標準/拡張/RTR往復） | 一部成功（電源再接続後の往復再開） | [Pico 2 + MCP2518](hardware/2026-10-07-pico2-mcp2518/README.md) |
 
 ビルド条件: Arduino-Pico 5.5.1（RP系）、Arduino-ESP32 2.0.17（S3旧API）、
 Arduino-ESP32 3.3.10（S3/C5新API）。全48組み合わせとS3新APIの追加12組み合わせを確認。
@@ -73,15 +76,24 @@ MCPの内部ループバック成功も、実際の水晶周波数・通信速�
 
 ## 次回再開時のメモ
 
-- MCP2518の実機診断は未実施。ユーザーが時間の都合で試験を中断。
+- 2026-10-06に中断したMCP2518試験を2026-10-07に再開し、内部診断成功ログを取得。
 - 所持モジュールはJP WORKS MCP2518 + MCP2562FD（Switch Science商品10019）、水晶20 MHz。
   [メーカー資料](https://github.com/TLDSJPWORK/CAN-FD_Board)の回路図・設定画像を確認済み。
-- 次の予定: Pico 2 + Mcp2518Diagnostic、500 kbps、oscillatorHz=20000000。
+- MCP2518内部診断の案内条件: Pico 2 + Mcp2518Diagnostic、500 kbps、oscillatorHz=20000000。
   SPIはSO GP0、CS GP1、SCK GP2、SI GP3。INTとCANH/CANLは内部診断では未接続。
   ジャンパーを3.3 V側、GND共通、モジュールの5V端子にVBUS、3.3V端子に3V3 OUTを接続する案内まで実施。
-  接続・書き込み・動作成功は未確認。
+  内部診断成功ログを取得済み。配線・書き込み内容の独立確認は未実施。
 - Pico 2の初回シリアル無表示は、接続待ちとBOOT表示を追加後にログ取得できた。
   共通サンプルへの接続待ち・診断前表示の改善は未反映。
 - MCP2515のトランシーバー型番と3.3 Vでの外部通信可否は未確認。
-- 内部診断後の通常通信、Echo/Periodic/SerialInputの実機試験、断線試験、
-  RP2350での実行、2バス同時通信は今後の確認項目。
+- S3 Periodic/SerialInput ↔ Pico 2 + MCP2518 Echoで外部往復成功。
+  周期連番11フレーム、シリアル入力6ケース（標準/拡張、0/2/8バイト、RTR DLC 0/8）を確認。
+  Pico 2のUSB切断で返信停止、再接続・モニター開放後にS3リセットなしで返信再開。
+- 次回は逆方向: Pico 2をMcp2518Periodic、S3をInternalCanEchoへ変更する予定。
+  双方500 kbps、S3 TX D0/RX D1、Pico 2 SPIピンと20 MHz設定は同じ。
+  配線はCANH同士/CANL同士/GND共通、双方終端有効。Pico 2のSerial接続待ちを残す。
+  逆方向の書き込み・実行・成功ログは未取得。
+- bus-off後の復旧、同一プロセスでの診断→通常begin/end、SPI断線復旧、
+  長時間/高負荷、他構成の外部通信、RP2350での実行、C5の2バス同時通信は未実施。
+
+外部通信記録: [S3 ↔ Pico 2 + MCP2518](hardware/2026-10-07-s3-pico2-mcp2518-external/README.md)。

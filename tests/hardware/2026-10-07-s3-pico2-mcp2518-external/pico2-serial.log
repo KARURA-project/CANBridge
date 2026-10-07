@@ -1,0 +1,3 @@
+BOOT: serial connected
+Ok
+HEALTH busOff=0 passive=0 receiveLoss=0 raw=0x00000000
