@@ -19,7 +19,12 @@ canbridge::Bus bus;
 canbridge::examples::Runner<canbridge::Bus> runner(bus, canbridge::examples::Mode::Periodic);
 
 void setup() {
-    Serial.begin(115200); // モニターを開いてからリセットすると起動時の表示を確認できます。
+    Serial.begin(115200);
+    // 起動時だけ最大5秒待ちます。モニターなしでも通信を開始します。
+    const unsigned long serialWaitStart = millis();
+    while (!Serial && millis() - serialWaitStart < 5000) {
+        delay(1);
+    }
     config.bitrate = BITRATE;
     config.spi = &SPI;
     config.csPin = CS_PIN;

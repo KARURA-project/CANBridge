@@ -1,6 +1,7 @@
 # Validation
 
 See [構成別の検証状況・実機記録](VALIDATION.md) for current hardware coverage.
+[実際に遭遇した問題](KNOWN_ISSUES.md) records installation and environment issues.
 
 ## Host checks
 

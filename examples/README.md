@@ -98,3 +98,11 @@ remain blocked until end() confirms shutdown. On success call begin(config)
 separately to start normal operation. Tests cover standard/extended data frames,
 zero/eight bytes and a remote frame. Runtime and memory tests on physical boards
 remain required; these examples do not certify hardware functionality.
+
+## 起動時のシリアル接続待ち
+
+全12サンプルはSerial.begin()後、モニター接続まで最大5秒待ちます。
+接続済みなら直ちに進み、モニターなしでも5秒後に通信・診断を開始します。
+Windowsで診断結果が表示されない事象は、接続待ちを追加すると解消したとユーザーから報告されました。
+待機はsetup()の起動時のみで、通信中のloop()は非ブロッキングです。
+診断表示後にモニターを開いた場合は、モニターを開いてからリセットしてください。

@@ -26,7 +26,11 @@ void runDiagnostic(const char *name) {
 }
 void setup() {
     Serial.begin(115200);
-    delay(1000); // 起動時だけ。モニターを開いてからリセットしてください。
+    // 起動時だけ最大5秒待ちます。モニターなしでも通信を開始します。
+    const unsigned long serialWaitStart = millis();
+    while (!Serial && millis() - serialWaitStart < 5000) {
+        delay(1);
+    }
     Serial.printf("Arduino-ESP32 %s; ESP-IDF %s\n", ESP_ARDUINO_VERSION_STR, esp_get_idf_version());
     config.bitrate = 1000000;
     config.txPin = D0;

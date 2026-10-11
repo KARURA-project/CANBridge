@@ -34,7 +34,18 @@ S3内蔵CAN ↔ Pico 2 + MCP2518の外部往復通信を500 kbpsで確認しま�
 git clone --recurse-submodules https://github.com/KARURA-project/CANBridge.git
 ```
 
+Arduino IDEでクローン版を使う場合は、IDEの「スケッチブックの保存場所」にある
+`libraries` フォルダーへ上記手順で取得し、`libraries/CANBridge` となるように配置します。
+既に通常の `git clone` で取得した場合は、CANBridgeフォルダー内で次を実行してください。
+
+```sh
+git submodule update --init --recursive
+```
+
 通常のGitHub「Download ZIP」にはサブモジュールの中身が含まれません。
+**このZIPをそのままArduino IDEへ入れないでください。**
+GitHub ZIPから展開したフォルダーにはGit管理情報もないため、上記コマンドで補完できません。
+再帰クローン版に置き換えるか、下記の依存同梱ZIPを使ってください。
 Arduino IDEは、リリース添付の `CANBridge.zip` を「ZIP形式のライブラリをインストール」で読み込んでください。
 これには固定された依存ソース・ライセンスを含み、追加ライブラリのインストールは不要です。
 
